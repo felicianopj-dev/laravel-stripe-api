@@ -11,6 +11,7 @@
             ->orderBy('amount_cents')
             ->get();
     @endphp
+    <meta name="api-token" content="{{ $apiToken }}">
 
     <div class="row justify-content-center">
         <div class="col-md-6">
@@ -45,4 +46,48 @@
 
         </div>
     </div>
+@endsection
+
+@section('script')
+    <script>
+        document.getElementById('payBtn').addEventListener('click', async () => {
+            const token = document
+                .querySelector('meta[name="api-token"]')
+                ?.getAttribute('content');
+
+            if (!token) {
+                alert('Missing API token - check .env');
+                return;
+            }
+
+            const productCode = document.getElementById('product_code').value;
+
+            if (!productCode) {
+                alert('Please select a product.');
+                return;
+            }
+
+            const res = await fetch('/api/billing/checkout', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    product_code: productCode
+                })
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                alert(err.message || 'Checkout failed');
+                return;
+            }
+
+            const data = await res.json();
+            window.location.href = data.checkout_url;
+        });
+    </script>
 @endsection

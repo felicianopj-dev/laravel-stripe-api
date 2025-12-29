@@ -9,7 +9,9 @@ Route::get('/', function () {
 });
 
 Route::get('/checkout', function () {
-    return view('checkout.form');
+    return view('checkout.form', [
+        'apiToken' => config('app.demo_api_token'),
+    ]);
 })->name('checkout.form');
 
 Route::post('/checkout', [CheckoutController::class, 'create'])
@@ -25,5 +27,5 @@ Route::get('/checkout/cancel', function () {
 
 Route::prefix('api')->group(function () {
     Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
-    Route::post('/billing/checkout', [CheckoutController::class, 'create']);
+    Route::middleware('auth:sanctum')->post('/billing/checkout', [CheckoutController::class, 'create']);
 });
